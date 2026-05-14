@@ -232,7 +232,7 @@
 
 <header>
   <span style="font-size:1.4rem">🌲</span>
-  <h1>林業日報</h1>
+  <h1>現場日報</h1>
 </header>
 
 <div class="container">
@@ -252,11 +252,11 @@
     </div>
     <div class="field">
       <label>現場名</label>
-      <input type="text" id="siteName" placeholder="例：○○山林区">
+      <input type="text" id="siteName" placeholder="例：悟入谷">
     </div>
     <div class="field">
       <label>記述者名</label>
-      <input type="text" id="authorName" placeholder="例：山田 太郎">
+      <input type="text" id="authorName" placeholder="例：曽根由輝">
     </div>
   </div>
 
@@ -277,7 +277,7 @@
     <div class="card-title">給油（任意）</div>
     <div class="multi-list" id="fuelList">
       <div class="multi-row fuel-row">
-        <input type="text" placeholder="重機名（例：ハーベスタ）">
+        <input type="text" placeholder="重機名">
         <input type="number" placeholder="給油量" step="0.1" min="0">
         <span class="unit">L</span>
         <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
@@ -291,25 +291,23 @@
     <div class="card-title">土場 → 外　搬出</div>
     <div class="multi-list" id="transportList">
       <div class="multi-row transport-row">
-        <input type="text" placeholder="材種（例：スギ）">
-        <input type="number" placeholder="台数" min="0" step="1">
-        <span class="unit">台</span>
+        <input type="text" placeholder="スギ3mなど">
         <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     </div>
-    <button class="btn-add" onclick="addTransportRow()">＋ 材種を追加</button>
+    <button class="btn-add" onclick="addTransportRow()">＋ 追加</button>
   </div>
 
   <!-- 今日やったこと -->
   <div class="card">
     <div class="card-title">今日やったこと</div>
     <div class="field">
-      <div class="time-label">☀️ 午前</div>
-      <textarea id="memoAm" placeholder="午前の作業内容を入力…"></textarea>
+      <div class="time-label">☀️ 前半</div>
+      <textarea id="memoAm" placeholder="前半の作業内容を入力…"></textarea>
     </div>
     <div class="field">
-      <div class="time-label">🌇 午後</div>
-      <textarea id="memoPm" placeholder="午後の作業内容を入力…"></textarea>
+      <div class="time-label">🌇 後半</div>
+      <textarea id="memoPm" placeholder="後半の作業内容を入力…"></textarea>
     </div>
   </div>
 
@@ -383,9 +381,7 @@
     const row = document.createElement('div');
     row.className = 'multi-row transport-row';
     row.innerHTML = `
-      <input type="text" placeholder="材種（例：ヒノキ）">
-      <input type="number" placeholder="台数" min="0" step="1">
-      <span class="unit">台</span>
+      <input type="text" placeholder="スギ3mなど">
       <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
     `;
     list.appendChild(row);
@@ -428,10 +424,8 @@
     const transportRows = document.querySelectorAll('.transport-row');
     const transport = [];
     transportRows.forEach(row => {
-      const inputs = row.querySelectorAll('input');
-      const type = inputs[0].value.trim();
-      const count = inputs[1].value.trim();
-      if (type || count) transport.push(`${type} ${count}台`);
+      const val = row.querySelector('input').value.trim();
+      if (val) transport.push(val);
     });
 
     const data = {
@@ -474,7 +468,7 @@
     document.getElementById('memoPm').value = '';
     document.getElementById('fuelList').innerHTML = `
       <div class="multi-row fuel-row">
-        <input type="text" placeholder="重機名（例：ハーベスタ）">
+        <input type="text" placeholder="重機名">
         <input type="number" placeholder="給油量" step="0.1" min="0">
         <span class="unit">L</span>
         <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
@@ -482,9 +476,7 @@
     `;
     document.getElementById('transportList').innerHTML = `
       <div class="multi-row transport-row">
-        <input type="text" placeholder="材種（例：スギ）">
-        <input type="number" placeholder="台数" min="0" step="1">
-        <span class="unit">台</span>
+        <input type="text" placeholder="スギ3mなど">
         <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     `;
