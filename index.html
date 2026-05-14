@@ -274,7 +274,7 @@
 
   <!-- 給油 -->
   <div class="card">
-    <div class="card-title">給油（任意）</div>
+    <div class="card-title">給油</div>
     <div class="multi-list" id="fuelList">
       <div class="multi-row fuel-row">
         <input type="text" placeholder="重機名">
@@ -360,7 +360,7 @@
     const row = document.createElement('div');
     row.className = 'multi-row fuel-row';
     row.innerHTML = `
-      <input type="text" placeholder="重機名（例：フォワーダ）">
+      <input type="text" placeholder="重機名">
       <input type="number" placeholder="給油量" step="0.1" min="0">
       <span class="unit">L</span>
       <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
@@ -383,7 +383,7 @@
     const row = document.createElement('div');
     row.className = 'multi-row transport-row';
     row.innerHTML = `
-      <input type="text" placeholder="スギ3mなど">
+      <input type="text" placeholder="">
       <input type="number" placeholder="台数" min="0" step="1">
       <span class="unit">台</span>
       <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
