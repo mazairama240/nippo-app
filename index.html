@@ -109,7 +109,7 @@
 
     textarea {
       resize: vertical;
-      min-height: 100px;
+      min-height: 90px;
     }
 
     .input-with-unit {
@@ -125,20 +125,26 @@
       font-weight: 600;
     }
 
-    /* 搬出リスト */
-    .transport-list {
+    /* 複数行リスト共通 */
+    .multi-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .transport-row {
+    .multi-row {
       display: flex;
       gap: 8px;
       align-items: center;
     }
+
+    /* 土場→外 搬出 */
     .transport-row input[type="text"] { flex: 2; }
     .transport-row input[type="number"] { flex: 1; }
+
+    /* 給油行 */
+    .fuel-row input[type="text"] { flex: 2; }
+    .fuel-row input[type="number"] { flex: 1; }
 
     .btn-remove {
       background: none;
@@ -163,6 +169,15 @@
       font-weight: 700;
       cursor: pointer;
       margin-top: 8px;
+    }
+
+    /* 午前・午後ラベル */
+    .time-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 4px;
+      margin-top: 4px;
     }
 
     /* 送信ボタン */
@@ -235,16 +250,24 @@
       <label>日付</label>
       <input type="date" id="date">
     </div>
+    <div class="field">
+      <label>現場名</label>
+      <input type="text" id="siteName" placeholder="例：○○山林区">
+    </div>
+    <div class="field">
+      <label>記述者名</label>
+      <input type="text" id="authorName" placeholder="例：山田 太郎">
+    </div>
   </div>
 
   <!-- 山→土場 搬出 -->
   <div class="card">
     <div class="card-title">山 → 土場　搬出</div>
     <div class="field">
-      <label>搬出材積</label>
+      <label>搬出林車数</label>
       <div class="input-with-unit">
-        <input type="number" id="volume" placeholder="0.00" step="0.01" min="0">
-        <span class="unit">m³</span>
+        <input type="number" id="volume" placeholder="0" step="1" min="0">
+        <span class="unit">車</span>
       </div>
     </div>
   </div>
@@ -252,34 +275,41 @@
   <!-- 給油 -->
   <div class="card">
     <div class="card-title">給油（任意）</div>
-    <div class="field">
-      <label>給油量</label>
-      <div class="input-with-unit">
-        <input type="number" id="fuel" placeholder="なければ空欄" step="0.1" min="0">
+    <div class="multi-list" id="fuelList">
+      <div class="multi-row fuel-row">
+        <input type="text" placeholder="重機名（例：ハーベスタ）">
+        <input type="number" placeholder="給油量" step="0.1" min="0">
         <span class="unit">L</span>
+        <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
       </div>
     </div>
+    <button class="btn-add" onclick="addFuelRow()">＋ 重機を追加</button>
   </div>
 
   <!-- 土場→外 搬出 -->
   <div class="card">
     <div class="card-title">土場 → 外　搬出</div>
-    <div class="transport-list" id="transportList">
-      <div class="transport-row">
+    <div class="multi-list" id="transportList">
+      <div class="multi-row transport-row">
         <input type="text" placeholder="材種（例：スギ）">
         <input type="number" placeholder="台数" min="0" step="1">
         <span class="unit">台</span>
-        <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+        <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     </div>
-    <button class="btn-add" onclick="addRow()">＋ 材種を追加</button>
+    <button class="btn-add" onclick="addTransportRow()">＋ 材種を追加</button>
   </div>
 
   <!-- 今日やったこと -->
   <div class="card">
     <div class="card-title">今日やったこと</div>
     <div class="field">
-      <textarea id="memo" placeholder="作業内容を入力…"></textarea>
+      <div class="time-label">☀️ 午前</div>
+      <textarea id="memoAm" placeholder="午前の作業内容を入力…"></textarea>
+    </div>
+    <div class="field">
+      <div class="time-label">🌇 午後</div>
+      <textarea id="memoPm" placeholder="午後の作業内容を入力…"></textarea>
     </div>
   </div>
 
@@ -324,20 +354,44 @@
     document.getElementById('warningBanner').style.display = url ? 'none' : 'block';
   }
 
-  function addRow() {
-    const list = document.getElementById('transportList');
+  // 給油行
+  function addFuelRow() {
+    const list = document.getElementById('fuelList');
     const row = document.createElement('div');
-    row.className = 'transport-row';
+    row.className = 'multi-row fuel-row';
     row.innerHTML = `
-      <input type="text" placeholder="材種（例：ヒノキ）">
-      <input type="number" placeholder="台数" min="0" step="1">
-      <span class="unit">台</span>
-      <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+      <input type="text" placeholder="重機名（例：フォワーダ）">
+      <input type="number" placeholder="給油量" step="0.1" min="0">
+      <span class="unit">L</span>
+      <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
     `;
     list.appendChild(row);
   }
 
-  function removeRow(btn) {
+  function removeFuelRow(btn) {
+    const rows = document.querySelectorAll('.fuel-row');
+    if (rows.length <= 1) {
+      btn.closest('.fuel-row').querySelectorAll('input').forEach(i => i.value = '');
+      return;
+    }
+    btn.closest('.fuel-row').remove();
+  }
+
+  // 搬出行
+  function addTransportRow() {
+    const list = document.getElementById('transportList');
+    const row = document.createElement('div');
+    row.className = 'multi-row transport-row';
+    row.innerHTML = `
+      <input type="text" placeholder="材種（例：ヒノキ）">
+      <input type="number" placeholder="台数" min="0" step="1">
+      <span class="unit">台</span>
+      <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
+    `;
+    list.appendChild(row);
+  }
+
+  function removeTransportRow(btn) {
     const rows = document.querySelectorAll('.transport-row');
     if (rows.length <= 1) {
       btn.closest('.transport-row').querySelectorAll('input').forEach(i => i.value = '');
@@ -360,10 +414,20 @@
       return;
     }
 
+    // 給油リストを収集
+    const fuelRows = document.querySelectorAll('.fuel-row');
+    const fuelList = [];
+    fuelRows.forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const machine = inputs[0].value.trim();
+      const amount = inputs[1].value.trim();
+      if (machine || amount) fuelList.push(`${machine} ${amount}L`);
+    });
+
     // 搬出リストを収集
-    const rows = document.querySelectorAll('.transport-row');
+    const transportRows = document.querySelectorAll('.transport-row');
     const transport = [];
-    rows.forEach(row => {
+    transportRows.forEach(row => {
       const inputs = row.querySelectorAll('input');
       const type = inputs[0].value.trim();
       const count = inputs[1].value.trim();
@@ -372,10 +436,13 @@
 
     const data = {
       date: document.getElementById('date').value,
+      siteName: document.getElementById('siteName').value.trim(),
+      authorName: document.getElementById('authorName').value.trim(),
       volume: document.getElementById('volume').value || '0',
-      fuel: document.getElementById('fuel').value || '',
+      fuel: fuelList.join(' / '),
       transport: transport.join(' / '),
-      memo: document.getElementById('memo').value.trim(),
+      memoAm: document.getElementById('memoAm').value.trim(),
+      memoPm: document.getElementById('memoPm').value.trim(),
     };
 
     const btn = document.getElementById('submitBtn');
@@ -400,18 +467,27 @@
   }
 
   function clearForm() {
+    document.getElementById('siteName').value = '';
+    document.getElementById('authorName').value = '';
     document.getElementById('volume').value = '';
-    document.getElementById('fuel').value = '';
-    document.getElementById('memo').value = '';
+    document.getElementById('memoAm').value = '';
+    document.getElementById('memoPm').value = '';
+    document.getElementById('fuelList').innerHTML = `
+      <div class="multi-row fuel-row">
+        <input type="text" placeholder="重機名（例：ハーベスタ）">
+        <input type="number" placeholder="給油量" step="0.1" min="0">
+        <span class="unit">L</span>
+        <button class="btn-remove" onclick="removeFuelRow(this)" title="削除">×</button>
+      </div>
+    `;
     document.getElementById('transportList').innerHTML = `
-      <div class="transport-row">
+      <div class="multi-row transport-row">
         <input type="text" placeholder="材種（例：スギ）">
         <input type="number" placeholder="台数" min="0" step="1">
         <span class="unit">台</span>
-        <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+        <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     `;
-    // 今日の日付に戻す
     document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
   }
 </script>

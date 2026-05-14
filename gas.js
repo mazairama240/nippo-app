@@ -6,17 +6,25 @@ function doPost(e) {
 
   // ヘッダーがなければ追加
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['日付', '搬出材積(m³)', '給油量(L)', '土場→外 搬出', '今日やったこと', '送信日時']);
+    sheet.appendRow([
+      '日付', '現場名', '記述者名',
+      '搬出林車数(車)', '給油（重機・量）',
+      '土場→外 搬出', '今日やったこと（午前）', '今日やったこと（午後）',
+      '送信日時'
+    ]);
   }
 
   const data = JSON.parse(e.postData.contents);
 
   sheet.appendRow([
     data.date,
+    data.siteName,
+    data.authorName,
     data.volume,
     data.fuel,
     data.transport,
-    data.memo,
+    data.memoAm,
+    data.memoPm,
     new Date().toLocaleString('ja-JP'),
   ]);
 
