@@ -292,6 +292,8 @@
     <div class="multi-list" id="transportList">
       <div class="multi-row transport-row">
         <input type="text" placeholder="スギ3mなど">
+        <input type="number" placeholder="台数" min="0" step="1">
+        <span class="unit">台</span>
         <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     </div>
@@ -382,6 +384,8 @@
     row.className = 'multi-row transport-row';
     row.innerHTML = `
       <input type="text" placeholder="スギ3mなど">
+      <input type="number" placeholder="台数" min="0" step="1">
+      <span class="unit">台</span>
       <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
     `;
     list.appendChild(row);
@@ -424,8 +428,10 @@
     const transportRows = document.querySelectorAll('.transport-row');
     const transport = [];
     transportRows.forEach(row => {
-      const val = row.querySelector('input').value.trim();
-      if (val) transport.push(val);
+      const inputs = row.querySelectorAll('input');
+      const type = inputs[0].value.trim();
+      const count = inputs[1].value.trim();
+      if (type || count) transport.push(`${type} ${count}台`);
     });
 
     const data = {
@@ -477,6 +483,8 @@
     document.getElementById('transportList').innerHTML = `
       <div class="multi-row transport-row">
         <input type="text" placeholder="スギ3mなど">
+        <input type="number" placeholder="台数" min="0" step="1">
+        <span class="unit">台</span>
         <button class="btn-remove" onclick="removeTransportRow(this)" title="削除">×</button>
       </div>
     `;
