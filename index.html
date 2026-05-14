@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>日報</title>
+  <style>
+    :root {
+      --green: #2d6a4f;
+      --green-light: #40916c;
+      --green-pale: #d8f3dc;
+      --bg: #f8faf8;
+      --surface: #ffffff;
+      --border: #d0ddd0;
+      --text: #1b2e1b;
+      --muted: #6b7f6b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: var(--green);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--green-pale);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input[type="date"],
+    input[type="number"],
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--green-light);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .input-with-unit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-with-unit input { flex: 1; }
+    .unit {
+      font-size: 0.9rem;
+      color: var(--muted);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    /* 搬出リスト */
+    .transport-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .transport-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .transport-row input[type="text"] { flex: 2; }
+    .transport-row input[type="number"] { flex: 1; }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: #c0392b;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      line-height: 1;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-add {
+      background: var(--green-pale);
+      color: var(--green);
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* 送信ボタン */
+    .btn-submit {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 18px;
+      width: 100%;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-submit:active { transform: scale(0.98); background: var(--green-light); }
+    .btn-submit:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    /* トースト通知 */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1b2e1b;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: #c0392b; }
+
+    /* スプレッドシートURL未設定の警告 */
+    .warning-banner {
+      background: #fff3cd;
+      border: 1.5px solid #ffc107;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #856404;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.4rem">🌲</span>
+  <h1>林業日報</h1>
+</header>
+
+<div class="container">
+
+  <!-- 未設定警告（URL設定後に非表示） -->
+  <div class="warning-banner" id="warningBanner">
+    ⚠️ Google スプレッドシートとまだ連携していません。<br>
+    下部の「送信先URLを設定」から設定してください。
+  </div>
+
+  <!-- 基本情報 -->
+  <div class="card">
+    <div class="card-title">基本情報</div>
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="date">
+    </div>
+  </div>
+
+  <!-- 山→土場 搬出 -->
+  <div class="card">
+    <div class="card-title">山 → 土場　搬出</div>
+    <div class="field">
+      <label>搬出材積</label>
+      <div class="input-with-unit">
+        <input type="number" id="volume" placeholder="0.00" step="0.01" min="0">
+        <span class="unit">m³</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 給油 -->
+  <div class="card">
+    <div class="card-title">給油（任意）</div>
+    <div class="field">
+      <label>給油量</label>
+      <div class="input-with-unit">
+        <input type="number" id="fuel" placeholder="なければ空欄" step="0.1" min="0">
+        <span class="unit">L</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 土場→外 搬出 -->
+  <div class="card">
+    <div class="card-title">土場 → 外　搬出</div>
+    <div class="transport-list" id="transportList">
+      <div class="transport-row">
+        <input type="text" placeholder="材種（例：スギ）">
+        <input type="number" placeholder="台数" min="0" step="1">
+        <span class="unit">台</span>
+        <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addRow()">＋ 材種を追加</button>
+  </div>
+
+  <!-- 今日やったこと -->
+  <div class="card">
+    <div class="card-title">今日やったこと</div>
+    <div class="field">
+      <textarea id="memo" placeholder="作業内容を入力…"></textarea>
+    </div>
+  </div>
+
+  <!-- 送信 -->
+  <button class="btn-submit" id="submitBtn" onclick="submitReport()">スプレッドシートに送信</button>
+
+  <!-- URL設定 -->
+  <div class="card">
+    <div class="card-title">送信先URLを設定</div>
+    <div class="field">
+      <label>Google Apps Script の URL</label>
+      <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." oninput="saveUrl()">
+    </div>
+  </div>
+
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // 今日の日付をセット
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+
+  // 保存済みURLを読み込む
+  const savedUrl = localStorage.getItem('scriptUrl') || '';
+  document.getElementById('scriptUrl').value = savedUrl;
+  updateWarning();
+
+  function saveUrl() {
+    const url = document.getElementById('scriptUrl').value.trim();
+    localStorage.setItem('scriptUrl', url);
+    updateWarning();
+  }
+
+  function updateWarning() {
+    const url = localStorage.getItem('scriptUrl') || '';
+    document.getElementById('warningBanner').style.display = url ? 'none' : 'block';
+  }
+
+  function addRow() {
+    const list = document.getElementById('transportList');
+    const row = document.createElement('div');
+    row.className = 'transport-row';
+    row.innerHTML = `
+      <input type="text" placeholder="材種（例：ヒノキ）">
+      <input type="number" placeholder="台数" min="0" step="1">
+      <span class="unit">台</span>
+      <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+    `;
+    list.appendChild(row);
+  }
+
+  function removeRow(btn) {
+    const rows = document.querySelectorAll('.transport-row');
+    if (rows.length <= 1) {
+      btn.closest('.transport-row').querySelectorAll('input').forEach(i => i.value = '');
+      return;
+    }
+    btn.closest('.transport-row').remove();
+  }
+
+  function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => { toast.className = 'toast'; }, 3000);
+  }
+
+  async function submitReport() {
+    const url = localStorage.getItem('scriptUrl') || '';
+    if (!url) {
+      showToast('送信先URLが設定されていません', true);
+      return;
+    }
+
+    // 搬出リストを収集
+    const rows = document.querySelectorAll('.transport-row');
+    const transport = [];
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const type = inputs[0].value.trim();
+      const count = inputs[1].value.trim();
+      if (type || count) transport.push(`${type} ${count}台`);
+    });
+
+    const data = {
+      date: document.getElementById('date').value,
+      volume: document.getElementById('volume').value || '0',
+      fuel: document.getElementById('fuel').value || '',
+      transport: transport.join(' / '),
+      memo: document.getElementById('memo').value.trim(),
+    };
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '送信中…';
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      showToast('送信しました！');
+      clearForm();
+    } catch (e) {
+      showToast('送信に失敗しました', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'スプレッドシートに送信';
+    }
+  }
+
+  function clearForm() {
+    document.getElementById('volume').value = '';
+    document.getElementById('fuel').value = '';
+    document.getElementById('memo').value = '';
+    document.getElementById('transportList').innerHTML = `
+      <div class="transport-row">
+        <input type="text" placeholder="材種（例：スギ）">
+        <input type="number" placeholder="台数" min="0" step="1">
+        <span class="unit">台</span>
+        <button class="btn-remove" onclick="removeRow(this)" title="削除">×</button>
+      </div>
+    `;
+    // 今日の日付に戻す
+    document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+  }
+</script>
+</body>
+</html>
